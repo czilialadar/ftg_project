@@ -20,7 +20,7 @@
           output="screen"
           args="-entity turtlebot3 -file $(find-pkg-share turtlebot3_gazebo)/models/turtlebot3_burger/model.sdf -x 0.0 -y 0.0 -z 0.1"/>
 
-    <!-- Robotstatepublisher -->
+    <!-- Robot State Publisher -->
     <include file="$(find-pkg-share turtlebot3_gazebo)/launch/robot_state_publisher.launch.py"/>
 
     <!-- Static TF map->odom -->
