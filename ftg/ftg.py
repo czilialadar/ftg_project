@@ -16,8 +16,8 @@ class FollowTheGap(Node):
         # Paraméterek
         self.declare_parameter('safe_dist', 1.0)
         self.declare_parameter('fov', 180.0)
-        self.declare_parameter('speed', 0.3)
-        self.declare_parameter('p_turn', 1.5)
+        self.declare_parameter('speed', 0.2)
+        self.declare_parameter('p_turn', 0.6)
 
         self.safe_dist = self.get_parameter('safe_dist').value
         self.fov = np.radians(self.get_parameter('fov').value)
@@ -68,15 +68,17 @@ class FollowTheGap(Node):
         end_dist = front_ranges[end_idx]
         mean_dist = (start_dist + end_dist) / 2.0
         clamped_dist = np.clip(mean_dist, 0.5, 1.0)
+        x = clamped_dist * np.cos(angle)
+        y = clamped_dist * np.sin(angle)
 
         # Marker publikálása
         marker = Marker()
-        marker.header.frame_id = "base_link"
+        marker.header.frame_id = "base_scan"
         marker.header.stamp = self.get_clock().now().to_msg()
         marker.type = Marker.SPHERE
         marker.action = Marker.ADD
-        marker.pose.position.x = clamped_dist * np.cos(angle)
-        marker.pose.position.y = clamped_dist * np.sin(angle)
+        marker.pose.position.x = x
+        marker.pose.position.y = y
         marker.pose.position.z = 0.0
         marker.scale.x = 0.1
         marker.scale.y = 0.1
@@ -86,10 +88,12 @@ class FollowTheGap(Node):
         self.marker_pub.publish(marker)
 
         # Irányítás
-        #twist = Twist()
-        #twist.linear.x = self.speed
-        #twist.angular.z = -self.p_turn * angle
-        #self.cmd_pub.publish(twist)
+        twist = Twist()
+        twist.linear.x = self.speed
+        angle_drive = math.atan2(y, x)
+        twist.angular.z = self.p_turn * angle_drive
+        #self.get_logger().info("Steering angle: {:.2f} rad.".format(angle_drive))
+        self.cmd_pub.publish(twist)
 
     def find_largest_gap(self, data):
         nonzero = (data > self.safe_dist)

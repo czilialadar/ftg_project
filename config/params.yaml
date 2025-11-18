@@ -1,0 +1,6 @@
+ftg_node:
+  ros__parameters:
+    safe_dist: 1.0
+    fov: 180.0
+    speed: 0.2
+    p_turn: 0.6
