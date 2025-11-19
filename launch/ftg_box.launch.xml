@@ -1,0 +1,36 @@
+<launch>
+    
+    <!-- Node -->
+    <node pkg="ftg" exec="ftg" name="ftg_node" output="screen">
+        <param name="use_sim_time" value="true"/>
+    </node>
+
+    <!-- Gazebo szerver a saját forburger világgal -->
+    <include file="$(find-pkg-share gazebo_ros)/launch/gzserver.launch.py">
+        <arg name="world" value="$(find-pkg-share turtlebot3_gazebo)/worlds/ftg_map_box.world"/>
+    </include>
+ 
+    <!-- Gazebo kliens (grafikus felület) -->
+    <include file="$(find-pkg-share gazebo_ros)/launch/gzclient.launch.py"/>
+ 
+    <!-- TurtleBot3 spawnolása -->
+    <node pkg="gazebo_ros"
+          exec="spawn_entity.py"
+          name="spawn_turtlebot3"
+          output="screen"
+          args="-entity turtlebot3 -file $(find-pkg-share turtlebot3_gazebo)/models/turtlebot3_burger/model.sdf -x 0.0 -y 0.0 -z 0.1"/>
+
+    <!-- Robot State Publisher -->
+    <include file="$(find-pkg-share turtlebot3_gazebo)/launch/robot_state_publisher.launch.py"/>
+
+    <!-- Static TF map->odom -->
+    <node pkg="tf2_ros"
+          exec="static_transform_publisher"
+          name="map_to_odom_fixed"
+          output="screen"
+          args="0.0 0.0 0.0 0.0 0.0 0.0 map odom"/>
+
+    <!-- RVIZ -->
+    <node pkg="rviz2" exec="rviz2" name="rviz2" args="-d $(find-pkg-share ftg)/rviz/ftg.rviz"/>
+
+</launch>
