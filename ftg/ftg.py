@@ -38,6 +38,7 @@ class FollowTheGap(Node):
 
         self.create_subscription(Odometry, "/odom", self.odom_callback, 10)
 
+
     # Path frissítése odometria alapján
     def odom_callback(self, msg: Odometry):
         # Path memória limit (régi pontok törlése)
@@ -96,7 +97,7 @@ class FollowTheGap(Node):
         x = clamped_dist * np.cos(angle)
         y = clamped_dist * np.sin(angle)
 
-        # Marker publikálása
+        # Marker
         marker = Marker()
         marker.header.frame_id = "base_scan"
         marker.header.stamp = self.get_clock().now().to_msg()
@@ -112,7 +113,6 @@ class FollowTheGap(Node):
         marker.color.g = 1.0
         self.marker_pub.publish(marker)
 
-
         # Irányítás
         twist = Twist()
         twist.linear.x = self.speed
@@ -120,6 +120,7 @@ class FollowTheGap(Node):
         twist.angular.z = self.p_turn * angle_drive
         self.cmd_pub.publish(twist)
         
+
     # Legnagyobb rés keresése
     def find_largest_gap(self, data):
         nonzero = (data > self.safe_dist)
