@@ -4,8 +4,9 @@ from rclpy.node import Node
 import numpy as np
 import math
 
+from nav_msgs.msg import Odometry, Path
 from sensor_msgs.msg import LaserScan
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, PoseStamped
 from visualization_msgs.msg import Marker
 
 
@@ -29,8 +30,33 @@ class FollowTheGap(Node):
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.marker_pub = self.create_publisher(Marker, '/ftg_target', 10)
 
-        self.get_logger().info("FollowTheGap node started!")
+        # Path követéshez 
+        self.path = Path()
+        self.max_path_size = 1500
 
+        self.path_pub = self.create_publisher(Path, "/path", 10)
+
+        self.create_subscription(Odometry, "/odom", self.odom_callback, 10)
+
+    # Path frissítése odometria alapján
+    def odom_callback(self, msg: Odometry):
+        # Path memória limit (régi pontok törlése)
+        if len(self.path.poses) >= self.max_path_size:
+            del self.path.poses[0:int(self.max_path_size * 0.2)]
+
+        # Új pozíció hozzáadása
+        pose = PoseStamped()
+        pose.header = msg.header
+        pose.pose = msg.pose.pose
+
+        self.path.header = msg.header
+        self.path.poses.append(pose)
+
+        # Path publikálása
+        self.path_pub.publish(self.path)
+
+
+    # LIDAR adat feldolgozása
     def scan_callback(self, msg: LaserScan):
         ranges = np.asarray(msg.ranges, dtype=float)
         ranges[np.isnan(ranges)] = 0.0
@@ -39,22 +65,21 @@ class FollowTheGap(Node):
         N = len(ranges)
         inc = msg.angle_increment  # rad/minta
 
-        # fél FOV mintaszámban (pl. 180° -> 90° -> k ~ 90 minta, ha 1°/minta)
+        # fél FOV mintaszámban kiszámolva
         k = int(round((self.fov / 2.0) / inc))
         front_ranges = np.concatenate([ranges[-k:], ranges[:k]])
 
-        # Szögek: NE arange(min,max,inc), hanem N alapján, hogy hossza stimmeljen
+        # Szögek kiszámolása
         angles = msg.angle_min + np.arange(N) * inc
         front_angles = np.concatenate([angles[-k:], angles[:k]])
 
-        #self.get_logger().info("Front ranges size: {}, Front angles size: {}".format(len(front_ranges), len(front_angles)))
-
+        # Legnagyobb rés előszámolása
         if len(front_ranges) == 0:
             self.get_logger().warn("Nincs érvényes adat!")
             return
 
         gap_start, gap_end = self.find_largest_gap(front_ranges)
-        #self.get_logger().info("Start: {}, End: {}".format(gap_start, gap_end))
+
         if gap_start is None:
             self.get_logger().warn("Nincs érvényes rés!")
             return
@@ -87,14 +112,15 @@ class FollowTheGap(Node):
         marker.color.g = 1.0
         self.marker_pub.publish(marker)
 
+
         # Irányítás
         twist = Twist()
         twist.linear.x = self.speed
         angle_drive = math.atan2(y, x)
         twist.angular.z = self.p_turn * angle_drive
-        #self.get_logger().info("Steering angle: {:.2f} rad.".format(angle_drive))
         self.cmd_pub.publish(twist)
-
+        
+    # Legnagyobb rés keresése
     def find_largest_gap(self, data):
         nonzero = (data > self.safe_dist)
         max_len = 0
