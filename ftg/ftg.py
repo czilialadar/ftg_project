@@ -17,8 +17,8 @@ class FollowTheGap(Node):
         # Paraméterek
         self.declare_parameter('safe_dist', 1.0)
         self.declare_parameter('fov', 180.0)
-        self.declare_parameter('speed', 0.2)
-        self.declare_parameter('p_turn', 0.6)
+        self.declare_parameter('speed', 0.7)
+        self.declare_parameter('p_turn', 1)
 
         self.safe_dist = self.get_parameter('safe_dist').value
         self.fov = np.radians(self.get_parameter('fov').value)
