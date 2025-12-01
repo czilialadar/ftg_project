@@ -12,6 +12,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/ftg_labirinth.launch.xml']),
         ('share/' + package_name + '/launch', ['launch/ftg_box.launch.xml']),
+        ('share/' + package_name + '/launch', ['launch/ftg_test.launch.xml']),
         ('share/' + package_name + '/rviz', ['rviz/ftg.rviz'])
     ],
     install_requires=['setuptools'],
