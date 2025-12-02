@@ -33,6 +33,9 @@ class FollowTheGap(Node):
         # Path követéshez 
         self.path = Path()
         self.max_path_size = 1500
+        self.error_sum = 0.0
+        self.track_width = 0.0
+        self.count = 0
 
         self.path_pub = self.create_publisher(Path, "/path", 10)
 
@@ -62,6 +65,19 @@ class FollowTheGap(Node):
         ranges = np.asarray(msg.ranges, dtype=float)
         ranges[np.isnan(ranges)] = 0.0
         ranges[np.isinf(ranges)] = msg.range_max
+
+        # Hibaszámítás
+        right_dist=msg.ranges[90]
+        left_dist=msg.ranges[270]
+        error = left_dist - right_dist
+        width = left_dist + right_dist
+        self.error_sum += abs(error)
+        self.track_width += abs(width)
+        self.count += 1
+        average_error = self.error_sum / self.count if self.count > 0 else 0.0
+        average_width = self.track_width / self.count if self.count > 0 else 0.0
+        percent_error = (average_error / average_width * 100.0) if average_width > 0 else 0.0
+        self.get_logger().info(f"Avg. error: {average_error:.3f}m, Avg. width: {average_width:.3f}m, Percent error: {percent_error:.2f}%")
 
         N = len(ranges)
         inc = msg.angle_increment  # rad/minta
