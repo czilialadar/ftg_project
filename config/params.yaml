@@ -3,4 +3,4 @@ ftg_node:
     safe_dist: 1.0
     fov: 180.0
     speed: 0.2
-    p_turn: 0.6
+    p_turn: 0.5
