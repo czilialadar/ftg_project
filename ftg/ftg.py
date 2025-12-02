@@ -82,7 +82,7 @@ class FollowTheGap(Node):
         N = len(ranges)
         inc = msg.angle_increment  # rad/minta
 
-        # fél FOV mintaszámban kiszámolva
+        # fél FOV kiszámolása
         k = int(round((self.fov / 2.0) / inc))
         front_ranges = np.concatenate([ranges[-k:], ranges[:k]])
 
@@ -91,10 +91,6 @@ class FollowTheGap(Node):
         front_angles = np.concatenate([angles[-k:], angles[:k]])
 
         # Legnagyobb rés előszámolása
-        if len(front_ranges) == 0:
-            self.get_logger().warn("Nincs érvényes adat!")
-            return
-
         gap_start, gap_end = self.find_largest_gap(front_ranges)
 
         if gap_start is None:
