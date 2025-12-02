@@ -3,6 +3,7 @@
     <!-- Node -->
     <node pkg="ftg" exec="ftg" name="ftg_node" output="screen">
         <param name="use_sim_time" value="true"/>
+        <param from="$(find-pkg-share ftg)/config/params.yaml"/>
     </node>
 
     <!-- Gazebo szerver a saját forburger világgal -->
